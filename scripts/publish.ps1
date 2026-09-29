@@ -1,4 +1,4 @@
-param([string]$Configuration = 'Release', [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9._-]*$')][string]$OutputName = 'WordBubble-0.3.4', [switch]$NoRestore)
+param([string]$Configuration = 'Release', [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9._-]*$')][string]$OutputName = 'WordBubble-0.3.5', [switch]$NoRestore)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $sdk = Join-Path $projectRoot '.tools\dotnet\dotnet.exe'

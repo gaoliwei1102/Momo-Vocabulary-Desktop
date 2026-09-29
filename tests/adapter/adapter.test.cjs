@@ -431,3 +431,173 @@ test('spelling prompts expose rendered English examples and request only availab
     assert.equal(api.translation({ stamp: state.stamp, id: state.examples[0].id }).text, '');
   }
 });
+
+// The official note component has an unclassified view inside the content container.
+function addAssociation($, { type = '联想', text = 'serene 平静的\nserendipity 意外的幸运' } = {}) {
+  $('.rev-scroller').insertAdjacentHTML('beforeend', '<taro-view-core class="rev-content-container"><taro-view-core><taro-text-core class="note-type"></taro-text-core><taro-text-core class="note-note"></taro-text-core></taro-view-core></taro-view-core>');
+  const container = $('.rev-scroller').lastElementChild.firstElementChild;
+  const note = container.querySelector('.note-note');
+  const label = container.querySelector('.note-type');
+  if (type === null) label.remove(); else label.textContent = type;
+  note.textContent = text;
+  return { container, note, label };
+}
+
+test('answer reads the complete official association note with nested words and original line breaks', () => {
+  const { api, $ } = setup({ answer: true });
+  const { note } = addAssociation($, { type: '  联想\t 助记  ' });
+  note.innerHTML = '  <taro-text-core class="memo-word">serene</taro-text-core>\t  平静的\n<taro-text-core><taro-text-core class="memo-word">serendipity</taro-text-core>  意外的幸运</taro-text-core>\n\n记住这个联系。  ';
+  const state = api.read();
+  assert.equal(state.stage, 'answer');
+  assert.deepEqual(Object.keys(state.association).sort(), ['text', 'type']);
+  assert.equal(state.association.type, '联想 助记');
+  assert.equal(state.association.text, 'serene 平静的\nserendipity 意外的幸运\n\n记住这个联系。');
+});
+
+test('association type belongs to its note parent and never comes from another module', () => {
+  const { api, $ } = setup({ answer: true });
+  $('.rev-scroller').insertAdjacentHTML('afterbegin', '<div class="rev-content-container"><span class="note-type">另一个模块的类型</span></div>');
+  const { container } = addAssociation($, { type: null, text: '正文没有类别也应保留。' });
+  assert.equal(api.read().association.type, '');
+  assert.equal(api.read().association.text, '正文没有类别也应保留。');
+  container.insertAdjacentHTML('afterbegin', '<span class="note-type hidden">隐藏类型</span><span class="note-type">词根</span>');
+  assert.equal(api.read().association.type, '词根');
+});
+
+test('missing, empty and official placeholder notes have no association', () => {
+  for (const variant of ['missing', '', ' \t\n ', '暂无助记', ' \t暂无助记\n ']) {
+    const { api, $ } = setup({ answer: true });
+    if (variant !== 'missing') addAssociation($, { text: variant });
+    assert.equal(api.read().association, null, variant);
+  }
+});
+
+test('hidden note bodies and note parents are not read', () => {
+  for (const variant of ['body-hidden', 'body-css', 'body-aria', 'parent-css', 'parent-visibility', 'parent-opacity']) {
+    const { api, $ } = setup({ answer: true });
+    const { container, note } = addAssociation($);
+    if (variant === 'body-hidden') note.hidden = true;
+    if (variant === 'body-css') note.classList.add('hidden');
+    if (variant === 'body-aria') note.setAttribute('aria-hidden', 'true');
+    if (variant === 'parent-css') container.classList.add('hidden');
+    if (variant === 'parent-visibility') container.style.visibility = 'hidden';
+    if (variant === 'parent-opacity') container.style.opacity = '0';
+    Object.defineProperty(note, 'textContent', { get() { throw new Error('Read hidden association'); } });
+    assert.equal(api.read().association, null, variant);
+  }
+});
+
+test('association skips hidden notes and hidden types while keeping an untyped visible note', () => {
+  const { api, $ } = setup({ answer: true });
+  const hidden = addAssociation($, { text: '隐藏正文' }); hidden.container.hidden = true;
+  Object.defineProperty(hidden.note, 'textContent', { get() { throw new Error('Read hidden association'); } });
+  const shown = addAssociation($, { type: '隐藏类型', text: '可见正文' }); shown.label.hidden = true;
+  Object.defineProperty(shown.label, 'textContent', { get() { throw new Error('Read hidden association type'); } });
+  assert.equal(api.read().association.text, '可见正文');
+  assert.equal(api.read().association.type, '');
+});
+
+test('association is scoped to the active study root and its scroller', () => {
+  const { api, $, w } = setup({ answer: true });
+  const root = $('.rev-root');
+  const hidden = root.cloneNode(true); hidden.classList.add('hidden');
+  hidden.querySelector('.rev-scroller').insertAdjacentHTML('beforeend', '<div><span class="note-type">隐藏卡片</span><span class="note-note">隐藏答案</span></div>');
+  w.document.body.prepend(hidden);
+  const inactive = hidden.cloneNode(true); inactive.classList.remove('hidden'); w.document.body.append(inactive);
+  root.insertAdjacentHTML('beforeend', '<div><span class="note-type">滚动区域之外</span><span class="note-note">不能读取这里</span></div>');
+  assert.equal(api.read().association, null);
+  root.querySelector('.rev-scroller').insertAdjacentHTML('beforeend', '<div class="rev-content-container"><div><span class="note-type">联想</span><span class="note-note">当前卡片正文</span></div></div>');
+  assert.equal(api.read().association.text, '当前卡片正文');
+  assert.equal(api.read().association.type, '联想');
+});
+
+test('association bounds the displayed body and category without flattening newlines', () => {
+  const { api, $ } = setup({ answer: true });
+  addAssociation($, { type: '类'.repeat(45), text: '词\t  义\n' + '文'.repeat(6100) });
+  const association = api.read().association;
+  assert.equal(association.type, '类'.repeat(40));
+  assert.equal(association.text, ('词 义\n' + '文'.repeat(6100)).slice(0, 6000));
+});
+
+test('recall, spelling and modal stages never read or expose association answers', () => {
+  for (const stage of ['recall', 'spelling', 'spelling-recall', 'blocked']) {
+    const { api, $, w } = setup({ answer: stage !== 'recall' });
+    const { note, label } = addAssociation($);
+    if (stage === 'spelling') {
+      $('.spelling').remove(); $('.verify-input').classList.remove('hidden');
+      $('.verify-input').innerHTML = '<input type="text">';
+    }
+    if (stage === 'spelling-recall') {
+      $('.spelling').remove(); $('.rev-top').insertAdjacentHTML('beforeend', '<div class="spelling-hint">回忆拼写</div>');
+    }
+    if (stage === 'blocked') w.document.body.insertAdjacentHTML('beforeend', '<div role="dialog">请确认</div>');
+    for (const element of [note, label]) Object.defineProperty(element, 'textContent', {
+      get() { throw new Error('Read association before the answer stage'); }
+    });
+    const state = api.read();
+    assert.equal(state.stage, stage); assert.equal(state.association, null, stage);
+  }
+});
+
+test('unsupported feedback controls clear association when answer detection falls back to page', () => {
+  for (const variant of ['label', 'missing']) {
+    const { api, $ } = setup({ answer: true }); addAssociation($);
+    assert.ok(api.read().association);
+    if (variant === 'label') $('.reset-button').textContent = '删除';
+    else $('.reset-button').remove();
+    const state = api.read();
+    assert.equal(state.stage, 'page'); assert.equal(state.association, null, variant);
+  }
+});
+
+test('repeated association reads never click memo words or request definitions', () => {
+  const { api, $, w } = setup({ answer: true });
+  const { note } = addAssociation($);
+  note.innerHTML = '<span class="memo-word">serene</span> 平静的\n<span class="memo-word">serendipity</span> 幸运';
+  let clicks = 0, inputs = 0, requests = 0;
+  w.document.body.addEventListener('click', () => clicks++);
+  w.document.body.addEventListener('input', () => inputs++);
+  w.fetch = () => { requests++; throw new Error('Association read requested the network'); };
+  w.XMLHttpRequest = class { constructor() { requests++; throw new Error('Association read opened XHR'); } };
+  w.WebSocket = class { constructor() { requests++; throw new Error('Association read opened a socket'); } };
+  const first = api.read();
+  for (let i = 0; i < 3; i++) {
+    assert.equal(api.read().association.text, first.association.text);
+    assert.equal(api.read().stamp, first.stamp);
+  }
+  assert.equal(clicks, 0); assert.equal(inputs, 0); assert.equal(requests, 0);
+  assert.deepEqual(Object.keys(api).sort(), ['act', 'read', 'translation']);
+});
+
+test('association updates preserve the snapshot stamp and existing example translation requests', () => {
+  const { api, $ } = setup({ answer: true });
+  const before = api.read(); const command = { stamp: before.stamp, id: before.examples[0].id };
+  const { note, label, container } = addAssociation($);
+  for (const change of ['addition', 'body', 'type', 'identity', 'removal']) {
+    if (change === 'body') note.textContent = '更新后的联想正文';
+    if (change === 'type') label.textContent = '派生';
+    if (change === 'identity') container.replaceWith(container.cloneNode(true));
+    if (change === 'removal') $('.note-note').parentElement.remove();
+    const current = api.read();
+    assert.equal(current.stamp, before.stamp, change);
+    assert.equal(api.translation(command).text, '一次美好的偶遇。', change);
+  }
+});
+
+test('association changes never unlock pending feedback or allow a second submission', () => {
+  const { api, $, click } = setup({ answer: true });
+  const { note, label, container } = addAssociation($);
+  let feedback = 0; $('.reset-button').onclick = () => feedback++;
+  const before = api.read(); assert.equal(click('familiar').accepted, true);
+  for (const change of ['body', 'type', 'identity', 'removal']) {
+    if (change === 'body') note.textContent = '待提交时更新的助记';
+    if (change === 'type') label.textContent = '近义';
+    if (change === 'identity') container.replaceWith(container.cloneNode(true));
+    if (change === 'removal') $('.note-note').parentElement.remove();
+    const current = api.read();
+    assert.equal(current.stamp, before.stamp, change); assert.equal(current.waiting, true, change);
+    assert.equal(api.translation({ stamp: current.stamp, id: current.examples[0].id }), null, change);
+    assert.equal(click('familiar').accepted, false, change); assert.equal(click('forget').accepted, false, change);
+  }
+  assert.equal(feedback, 1);
+});

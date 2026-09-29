@@ -56,6 +56,7 @@ internal static class Program
         var answer = Render((FrameworkElement)card.Content, card.Width, card.Height);
         Save(answer, Path.Combine(output, "answer.png"));
         VerifyExamples(card, sample, output);
+        VerifyAssociations(card, sample, output);
         card.ApplySnapshot(new StudySnapshot { Stage = "spelling", Stamp = "spelling:sample", Meaning = "n. 意外发现美好事物的运气；机缘巧合", Message = "输入你记得的拼写", Progress = "13/80", Examples = sample.Examples, Actions = [new() { Id = "reveal", Label = "看看答案" }, new() { Id = "spelling-input", Label = "核对拼写" }] }, animate: false);
         Assert(((FrameworkElement)card.FindName("ExamplePanel")).Visibility == Visibility.Visible, "Spelling should keep its English example available.");
         AssertExample(card, 0, "显示翻译", "", Visibility.Collapsed);
@@ -191,6 +192,112 @@ internal static class Program
         Assert(scroll.VerticalOffset < 0.1, "A new word must open at the top instead of inheriting the previous examples' scroll position.");
         card.ApplySnapshot(sample, animate: false);
     }
+    private static void VerifyAssociations(LearningWindow card, StudySnapshot sample, string output)
+    {
+        var actionRequests = new List<string>();
+        var translationRequests = new List<string>();
+        void OnAction(string id, string stamp, string value) => actionRequests.Add(id);
+        void OnTranslation(string id, string stamp) => translationRequests.Add(id);
+        card.ActionRequested += OnAction;
+        card.TranslationRequested += OnTranslation;
+        var association = CopyExampleSnapshot(sample);
+        association.Word = "tenant"; association.Stamp = "preview:association";
+        association.Phonetic = "英 /ˈtenənt/"; association.Meaning = "n. 租户；房客";
+        association.Examples = [new() { Id = "example:1", Text = "The tenant moved into a small apartment." }, new() { Id = "example:2", Text = "Every tenant has a key to the front door." }];
+        association.Association = new StudyAssociation { Type = "联想助记", Text = "ten（十）+ ant（蚂蚁）\n想象十只小蚂蚁，一起租下一间小屋，成了房客。" };
+        card.ApplySnapshot(association, animate: false);
+        var button = (System.Windows.Controls.Button)card.FindName("AssociationButton");
+        var panel = (FrameworkElement)card.FindName("AssociationPanel");
+        var content = (System.Windows.Controls.TextBlock)card.FindName("AssociationText");
+        var type = (System.Windows.Controls.TextBlock)card.FindName("AssociationTypeText");
+        var familiar = (System.Windows.Controls.Button)card.FindName("FamiliarButton");
+        var scroll = (System.Windows.Controls.ScrollViewer)card.FindName("StudyScrollViewer");
+        Assert(button.Visibility == Visibility.Visible && panel.Visibility == Visibility.Collapsed, "Association entry must be discoverable on every answer and collapsed by default.");
+        Click(card, "AssociationButton");
+        // WPF can round the native window height by a fractional DIP at 150% DPI.
+        Assert(panel.Visibility == Visibility.Visible && Math.Abs(card.Height - 547) < 1, $"Expanding an association must use the detail card height (panel={panel.Visibility}, height={card.Height}).");
+        Assert(content.Text == association.Association.Text && content.Text.Contains('\n') && type.Text == "联想助记", "Association text and its original line breaks must be preserved.");
+        Assert(actionRequests.Count == 0 && translationRequests.Count == 0, "Expanding associations must not issue learning actions or translation requests.");
+        var associationPreview = Render((FrameworkElement)card.Content, card.Width, card.Height);
+        Save(associationPreview, Path.Combine(output, "association.png"));
+        Assert(content.ActualHeight > 0 && VisualTreeHelper.GetDrawing(content)?.Bounds.IsEmpty == false, "Association text must actually be rendered.");
+        Assert(familiar.IsEnabled, "Association expansion must keep learning feedback available.");
+        System.Windows.Input.FocusManager.SetFocusedElement(card, button);
+        card.ApplySnapshot(CopyExampleSnapshot(association), animate: false);
+        Assert(panel.Visibility == Visibility.Visible && ReferenceEquals(content, card.FindName("AssociationText")) && System.Windows.Input.FocusManager.GetFocusedElement(card) == button, "Equivalent polls must preserve expanded controls and logical focus.");
+        foreach (var routedEvent in new[] { System.Windows.Input.Keyboard.PreviewKeyDownEvent, System.Windows.Input.Keyboard.PreviewKeyUpEvent })
+        {
+            var key = new System.Windows.Input.KeyEventArgs(System.Windows.Input.Keyboard.PrimaryDevice, PresentationSource.FromVisual(card)!, Environment.TickCount, System.Windows.Input.Key.Space) { RoutedEvent = routedEvent };
+            button.RaiseEvent(key);
+            Assert(!key.Handled, "Space on the association button must remain available to the button.");
+        }
+        Assert(actionRequests.Count == 0, "Space on the association button must not trigger the global reveal action.");
+        Click(card, "DetailsButton");
+        Assert(panel.Visibility == Visibility.Collapsed && ((FrameworkElement)card.FindName("ExamplePanel")).Visibility == Visibility.Visible, "Opening examples must collapse associations.");
+        ClickExample(card, 0);
+        var generation = card.TranslationGeneration;
+        var changed = CopyExampleSnapshot(association);
+        changed.Association = new StudyAssociation { Type = "", Text = "新的助记\n<b>这些字符仍按纯文本显示。</b>" };
+        card.ApplySnapshot(changed, animate: false);
+        Assert(card.TranslationGeneration == generation && translationRequests.Count == 1, "Association-only polls must preserve pending example translations.");
+        card.ApplyTranslation(changed.Stamp, "example:1", "保持当前例句翻译。", generation);
+        AssertExample(card, 0, "隐藏翻译", "保持当前例句翻译。", Visibility.Visible);
+        Click(card, "AssociationButton");
+        Assert(((FrameworkElement)card.FindName("ExamplePanel")).Visibility == Visibility.Collapsed && card.TranslationGeneration > generation, "Opening associations must collapse examples and invalidate their translations.");
+        Assert(content.Text == changed.Association.Text && type.Text == "助记", "A changed association must update plain text and use the default type when empty.");
+        Click(card, "DetailsButton");
+        AssertExample(card, 0, "显示翻译", "", Visibility.Collapsed);
+        Click(card, "AssociationButton");
+        card.ShowActionPending("familiar");
+        Click(card, "AssociationButton"); Click(card, "AssociationButton");
+        Assert(!familiar.IsEnabled && actionRequests.Count == 0 && translationRequests.Count == 1, "Association toggles must preserve pending study actions and issue no additional requests.");
+        card.ApplySnapshot(changed, animate: false);
+        var noAssociation = CopyExampleSnapshot(changed); noAssociation.Association = null;
+        card.ApplySnapshot(noAssociation, animate: false);
+        Assert(panel.Visibility == Visibility.Visible && button.Visibility == Visibility.Visible && content.Text == "这个词暂时没有联想助记。", "Unavailable associations must retain the entry and show an explicit empty state.");
+        Assert(((FrameworkElement)card.FindName("AssociationTypeBadge")).Visibility == Visibility.Collapsed && ((FrameworkElement)card.FindName("AssociationSourceText")).Visibility == Visibility.Collapsed, "An empty association must not claim a type or source.");
+        Save(Render((FrameworkElement)card.Content, card.Width, card.Height), Path.Combine(output, "association-empty.png"));
+        var longAssociation = CopyExampleSnapshot(changed);
+        longAssociation.Association = new StudyAssociation { Type = "联想助记", Text = string.Join("\n", Enumerable.Range(1, 24).Select(index => $"第 {index} 个画面：十只小蚂蚁一起租下了温暖的小屋。")) };
+        card.ApplySnapshot(longAssociation, animate: false);
+        Render((FrameworkElement)card.Content, card.Width, card.Height);
+        scroll.ScrollToBottom(); Render((FrameworkElement)card.Content, card.Width, card.Height);
+        var offset = scroll.VerticalOffset;
+        Assert(offset > 100 && Math.Abs(card.Height - 547) < 1, "Long associations must scroll inside the fixed-height study card.");
+        card.ApplySnapshot(CopyExampleSnapshot(longAssociation), animate: false);
+        Render((FrameworkElement)card.Content, card.Width, card.Height);
+        Assert(Math.Abs(scroll.VerticalOffset - offset) < 0.1, "Equivalent association polls must preserve the user's scroll position.");
+        var feedbackBounds = familiar.TransformToAncestor((FrameworkElement)card.Content).TransformBounds(new Rect(familiar.RenderSize));
+        Assert(feedbackBounds.Top >= 0 && feedbackBounds.Bottom <= card.Height && familiar.IsEnabled, "Feedback must remain visible and usable below a scrolling association.");
+        Click(card, "FamiliarButton");
+        Assert(actionRequests.SequenceEqual(new[] { "familiar" }), "Feedback must still submit its normal learning action while an association is expanded.");
+        var next = CopyExampleSnapshot(longAssociation); next.Word = "resident"; next.Stamp = "preview:association-next";
+        card.ApplySnapshot(next, animate: false); Render((FrameworkElement)card.Content, card.Width, card.Height);
+        Assert(panel.Visibility == Visibility.Collapsed && scroll.VerticalOffset < 0.1, "A new word must collapse associations and reset scrolling.");
+        foreach (var stage in new[] { "recall", "spelling", "spelling-recall" })
+        {
+            Click(card, "AssociationButton");
+            var hidden = CopyExampleSnapshot(next); hidden.Stage = stage; hidden.Stamp = "preview:association-" + stage;
+            card.ApplySnapshot(hidden, animate: false);
+            Assert(button.Visibility == Visibility.Collapsed && panel.Visibility == Visibility.Collapsed && content.Text.Length == 0, "Recall and spelling must not expose association content, even if supplied in a snapshot.");
+            card.ApplySnapshot(next, animate: false);
+            Assert(panel.Visibility == Visibility.Collapsed, "Returning to the answer stage must not reopen an association.");
+        }
+        Click(card, "AssociationButton"); Click(card, "GoHomeButton");
+        Assert(panel.Visibility == Visibility.Collapsed, "Going home must close associations.");
+        Click(card, "StartButton"); Click(card, "AssociationButton");
+        var collapse = Descendants((FrameworkElement)card.Content).OfType<System.Windows.Controls.Button>()
+            .Single(item => System.Windows.Automation.AutomationProperties.GetName(item) == "收起为小精灵");
+        collapse.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+        Assert(panel.Visibility == Visibility.Collapsed, "Collapsing the card must close associations.");
+        // Exercise hide/show lifecycle only; every bitmap is rendered while the offscreen window is shown.
+        Click(card, "AssociationButton"); card.Hide();
+        Assert(panel.Visibility == Visibility.Collapsed, "Hiding the card must close associations.");
+        card.Show();
+        card.ActionRequested -= OnAction;
+        card.TranslationRequested -= OnTranslation;
+        card.ApplySnapshot(sample, animate: false);
+    }
     private static void AssertExampleLayout(LearningWindow card)
     {
         var scroll = (System.Windows.Controls.ScrollViewer)card.FindName("StudyScrollViewer");
@@ -220,6 +327,7 @@ internal static class Program
     {
         Stage = source.Stage, Stamp = source.Stamp, Word = source.Word, Phonetic = source.Phonetic,
         Progress = source.Progress, Meaning = source.Meaning, Actions = source.Actions,
+        Association = source.Association is { } association ? new StudyAssociation { Type = association.Type, Text = association.Text } : null,
         Examples = source.Examples.Select(example => new StudyExample { Id = example.Id, Text = example.Text }).ToArray()
     };
     private static (System.Windows.Controls.Button Button, System.Windows.Controls.TextBlock Translation) ExampleParts(LearningWindow card, int index)

@@ -51,9 +51,15 @@
       return { id: 'example-' + identity(english), text: text(english, 700), container };
     }).filter(example => example.text);
   const exampleContent = examples => examples.map(({ id, text }) => ({ id, text }));
+  const associationIn = root => {
+    const note = find('.rev-scroller .note-note', root);
+    const content = text(note, 6000);
+    if (!content || content === '暂无助记') return null;
+    return { type: text(find('.note-type', note.parentElement), 40), text: content };
+  };
 
   function inspect() {
-    const state = { stage: 'page', stamp: '', word: '', phonetic: '', meaning: '', examples: [],
+    const state = { stage: 'page', stamp: '', word: '', phonetic: '', meaning: '', examples: [], association: null,
       progress: '', message: '', waiting: false, actions: [] };
     const targets = {};
     let examples = [];
@@ -203,7 +209,9 @@
           state.actions.push({ id: expected[i][0], label, hint: text(find('.predict', button), 40) });
         }
       }
+      state.association = associationIn(root);
     }
+    // Mnemonic updates are read-only and must not invalidate examples or feedback.
     // Time/audio/progress-only mutations must not unlock another feedback click.
     const signature = JSON.stringify([state.stage, state.word, state.meaning, state.examples,
       identity(root), identity(spelling), identity(reveal), identity(meaning),

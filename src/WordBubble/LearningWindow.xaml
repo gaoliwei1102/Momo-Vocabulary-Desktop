@@ -65,8 +65,18 @@
               <StackPanel x:Name="RecallPanel" Margin="0,30,0,13"><TextBlock Text="在心里，说出它的意思。" Foreground="#6C7B5E" FontSize="14" /><TextBlock Text="记忆正在回来，不用着急。" Foreground="#7C856F" FontSize="11" Margin="0,10,0,0" /></StackPanel>
               <StackPanel x:Name="AnswerPanel" Visibility="Collapsed" Margin="0,22,0,0">
                 <Border Background="#EEF2E3" CornerRadius="14" Padding="14,13"><TextBlock x:Name="MeaningText" FontSize="14" LineHeight="24" Foreground="#3A5036" TextWrapping="Wrap" /></Border>
-                <Button x:Name="DetailsButton" HorizontalAlignment="Left" Padding="0,10" Background="Transparent" FontSize="11" Foreground="#6B7D57" Click="ToggleDetails" />
+                <WrapPanel>
+                  <Button x:Name="DetailsButton" HorizontalAlignment="Left" Padding="0,10" Background="Transparent" FontSize="11" Foreground="#6B7D57" Click="ToggleDetails" Margin="0,0,16,0" />
+                  <Button x:Name="AssociationButton" HorizontalAlignment="Left" Padding="0,10" Background="Transparent" FontSize="11" Foreground="#89704F" Click="ToggleAssociation" AutomationProperties.Name="联想词与助记" />
+                </WrapPanel>
                 <StackPanel x:Name="ExamplePanel" Visibility="Collapsed" Margin="0,0,0,7" />
+                <Border x:Name="AssociationPanel" Visibility="Collapsed" Background="#F6EEDC" CornerRadius="14" Padding="14,13" Margin="0,0,0,7">
+                  <StackPanel>
+                    <Border x:Name="AssociationTypeBadge" Background="#EBDFC4" CornerRadius="7" Padding="8,4" HorizontalAlignment="Left" Margin="0,0,0,9"><TextBlock x:Name="AssociationTypeText" Foreground="#806746" FontSize="10" TextWrapping="Wrap" /></Border>
+                    <TextBlock x:Name="AssociationText" Foreground="#645A43" FontSize="13" LineHeight="23" TextWrapping="Wrap" />
+                    <TextBlock x:Name="AssociationSourceText" Text="来自墨墨当前助记" Foreground="#92856B" FontSize="10" Margin="0,12,0,0" />
+                  </StackPanel>
+                </Border>
               </StackPanel>
               <StackPanel x:Name="SpellingPanel" Visibility="Collapsed" Margin="0,16,0,0"><TextBlock x:Name="SpellingHint" FontSize="11" Foreground="#7A826A" Margin="0,0,0,9" /><TextBox x:Name="SpellingInput" Style="{StaticResource Field}" MaxLength="120" FontFamily="Georgia" FontSize="19" AutomationProperties.Name="输入单词拼写" /></StackPanel>
             </StackPanel>

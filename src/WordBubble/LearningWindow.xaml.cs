@@ -9,7 +9,7 @@ public partial class LearningWindow : Window
     private string _screen = "home", _progress = "", _spellingStamp = "";
     private string _exampleStamp = "", _exampleStage = "", _exampleWord = "";
     private readonly List<ExamplePresentation> _examples = new();
-    private bool _details, _pending, _allowClose, _startWhenReady;
+    private bool _details, _associationExpanded, _pending, _allowClose, _startWhenReady;
     private int _goal = 3;
     public event Action? CollapseRequested, SettingsRequested, ReconnectRequested, SizeRequested;
     public event Action? AccountRequested;
@@ -26,14 +26,15 @@ public partial class LearningWindow : Window
         ShowInTaskbar = ConnectionLog.Enabled;
         SourceInitialized += (_, _) => { if (!ConnectionLog.Enabled) NativeMethods.MakeToolWindow(this); };
         Closing += (_, e) => { if (!_allowClose) { e.Cancel = true; RequestCollapse(); } };
-        IsVisibleChanged += (_, _) => { if (!IsVisible) { ResetTranslations(); _details = false; Render(); } };
+        IsVisibleChanged += (_, _) => { if (!IsVisible) { ResetTranslations(); _details = false; _associationExpanded = false; Render(); } };
         PreviewKeyDown += OnKeyDown;
-        PreviewKeyUp += (_, e) => { if (e.Key == Key.Space && !IsTyping(e.OriginalSource as DependencyObject) && !IsExampleButton(e.OriginalSource as DependencyObject) && StudyPage.IsVisible) e.Handled = true; };
+        PreviewKeyUp += (_, e) => { if (e.Key == Key.Space && !IsTyping(e.OriginalSource as DependencyObject) && !IsStudyDetailButton(e.OriginalSource as DependencyObject) && StudyPage.IsVisible) e.Handled = true; };
     }
     public void ApplySnapshot(StudySnapshot value, bool animate = true)
     {
         var changed = _snapshot.Word != value.Word || _snapshot.Stage != value.Stage;
         if (changed && value.Stage == "login") { _session.Stop(); _progress = ""; _screen = "home"; _startWhenReady = false; }
+        if (_exampleStamp != value.Stamp || _exampleStage != value.Stage || _exampleWord != value.Word) _associationExpanded = false;
         UpdateExamples(value);
         _snapshot = value; _pending = value.Waiting;
         if (LearningSession.TryProgress(value.Progress, out _, out _)) _progress = value.Progress;
@@ -57,11 +58,12 @@ public partial class LearningWindow : Window
         };
         if (page != "study" && (_details || _examples.Any(example => example.State != TranslationState.Hidden)))
         { ResetTranslations(); _details = false; }
+        if (page != "study" || _snapshot.Stage != "answer") _associationExpanded = false;
         LoginPage.Visibility = Show(page == "login"); HomePage.Visibility = Show(page == "home");
         StudyPage.Visibility = Show(page == "study"); CompletePage.Visibility = Show(page == "complete");
         DialogPage.Visibility = Show(page == "dialog"); StatusPage.Visibility = Show(page == "status");
         var width = page == "study" ? 372 : 420;
-        var height = page switch { "login" => 646, "home" => 593, "study" => _snapshot.Stage == "recall" ? 399 : _details || _snapshot.Stage.StartsWith("spelling", StringComparison.Ordinal) ? 547 : 463, "dialog" => 494, "complete" => 570, _ => 488 };
+        var height = page switch { "login" => 646, "home" => 593, "study" => _snapshot.Stage == "recall" ? 399 : _details || _associationExpanded || _snapshot.Stage.StartsWith("spelling", StringComparison.Ordinal) ? 547 : 463, "dialog" => 494, "complete" => 570, _ => 488 };
         if (Width != width || Height != height) { Width = width; Height = height; SizeRequested?.Invoke(); }
         HeaderCaption.Text = page == "study" ? "给记忆一点时间" : "你的桌边学习空间";
         FooterText.Text = _pending ? "等待墨墨响应…" : page == "study" ? "进度由墨墨记录  ·  Esc 收起" : "小小的坚持，也会生长。";
@@ -85,6 +87,14 @@ public partial class LearningWindow : Window
         DetailsButton.Visibility = Show(_examples.Count > 0);
         ExamplePanel.Visibility = Show(_details && _examples.Count > 0);
         DetailsButton.Content = _details ? "收起例句 −" : $"读{_examples.Count}句，加深印象 ＋";
+        AssociationButton.Visibility = Show(_snapshot.Stage == "answer");
+        AssociationButton.Content = _associationExpanded ? "收起联想助记 −" : "联想词 / 助记 ＋";
+        AssociationPanel.Visibility = Show(_associationExpanded);
+        var association = _snapshot.Stage == "answer" ? _snapshot.Association : null;
+        var hasAssociation = !string.IsNullOrWhiteSpace(association?.Text);
+        AssociationTypeBadge.Visibility = AssociationSourceText.Visibility = Show(hasAssociation);
+        AssociationTypeText.Text = hasAssociation ? string.IsNullOrWhiteSpace(association!.Type) ? "助记" : association.Type : "";
+        AssociationText.Text = hasAssociation ? association!.Text : _snapshot.Stage == "answer" ? "这个词暂时没有联想助记。" : "";
         RevealButton.Visibility = Show(_snapshot.Can("reveal")); RevealLabel.Text = spelling ? "看看答案" : "看看释义";
         RevealButton.IsEnabled = !_pending;
         RevealButton.Background = spelling ? (Brush)FindResource("Soft") : StartButton.Background;
@@ -252,7 +262,7 @@ public partial class LearningWindow : Window
             return;
         }
         if (StudyPage.Visibility != Visibility.Visible || Keyboard.Modifiers != ModifierKeys.None) return;
-        if (e.Key == Key.Space && IsExampleButton(e.OriginalSource as DependencyObject)) return;
+        if (e.Key == Key.Space && IsStudyDetailButton(e.OriginalSource as DependencyObject)) return;
         if (e.IsRepeat) { e.Handled = true; return; }
         var id = e.Key switch { Key.Space => "reveal", Key.D1 or Key.NumPad1 => "familiar", Key.D2 or Key.NumPad2 => "vague", Key.D3 or Key.NumPad3 => "forget", _ => null };
         if (id != null) { e.Handled = true; Request(id); }
@@ -263,10 +273,10 @@ public partial class LearningWindow : Window
             if (node is System.Windows.Controls.Primitives.TextBoxBase or PasswordBox) return true;
         return false;
     }
-    private bool IsExampleButton(DependencyObject? source)
+    private bool IsStudyDetailButton(DependencyObject? source)
     {
         for (var node = source; node != null; node = node is Visual ? VisualTreeHelper.GetParent(node) : LogicalTreeHelper.GetParent(node))
-            if (node is Button button && (button == DetailsButton || _examples.Any(example => example.Button == button))) return true;
+            if (node is Button button && (button == DetailsButton || button == AssociationButton || _examples.Any(example => example.Button == button))) return true;
         return false;
     }
     private void Reveal(object sender, RoutedEventArgs e) => Request("reveal");
@@ -275,14 +285,21 @@ public partial class LearningWindow : Window
     private void Vague(object sender, RoutedEventArgs e) => Request("vague");
     private void Forget(object sender, RoutedEventArgs e) => Request("forget");
     private void Spell(object sender, RoutedEventArgs e) => Request(_snapshot.Can("spelling-start") ? "spelling-start" : "spelling-input", SpellingInput.Text);
-    private void ToggleDetails(object sender, RoutedEventArgs e) { _details = !_details; if (!_details) ResetTranslations(); Render(); }
+    private void ToggleDetails(object sender, RoutedEventArgs e) { _details = !_details; if (_details) _associationExpanded = false; else ResetTranslations(); Render(); }
+    private void ToggleAssociation(object sender, RoutedEventArgs e)
+    {
+        if (_snapshot.Stage != "answer" || StudyPage.Visibility != Visibility.Visible) return;
+        _associationExpanded = !_associationExpanded;
+        if (_associationExpanded) { _details = false; ResetTranslations(); }
+        Render();
+    }
     private void OpenSettings(object sender, RoutedEventArgs e) => SettingsRequested?.Invoke();
     private void AccountHelp(object sender, RoutedEventArgs e) => App.OpenBrowser("https://www.maimemo.com/home/login");
     private void OpenTerms(object sender, RoutedEventArgs e) => App.OpenBrowser("https://www.maimemo.com/terms");
     private void OpenPrivacy(object sender, RoutedEventArgs e) => App.OpenBrowser("https://www.maimemo.com/privcay");
     private void OpenAccount(object sender, RoutedEventArgs e) { ClearSensitiveInput(); AccountRequested?.Invoke(); }
     private void Reconnect(object sender, RoutedEventArgs e) { ClearSensitiveInput(); ReconnectRequested?.Invoke(); }
-    private void RequestCollapse() { ResetTranslations(); _details = false; Render(); CollapseRequested?.Invoke(); }
+    private void RequestCollapse() { ResetTranslations(); _details = false; _associationExpanded = false; Render(); CollapseRequested?.Invoke(); }
     private void Collapse(object sender, RoutedEventArgs e) => RequestCollapse();
     public void ShutdownCard() { _allowClose = true; ClearSensitiveInput(); Close(); }
 }

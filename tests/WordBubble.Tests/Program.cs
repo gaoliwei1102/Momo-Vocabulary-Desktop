@@ -72,6 +72,36 @@ Check("translation results must match the requested word revision and sentence",
     Assert(StudyTranslation.Parse(result, "s:1", "e2") is null);
     Equal("", StudyTranslation.Parse("{\"stamp\":\"s:1\",\"id\":\"e1\",\"text\":\"\"}", "s:1", "e1"));
 });
+Check("official association preserves plain text, type and line breaks", () =>
+{
+    var snapshot = StudySnapshot.Parse("""
+        {"stage":"answer","stamp":"s:1","word":"tenant","association":{"type":"联想","text":"ten（十）+ ant（蚂蚁）\n十只蚂蚁成了新租客。<b>原文</b>"}}
+        """);
+    Assert(snapshot.Association != null);
+    Equal("联想", snapshot.Association!.Type);
+    Equal("ten（十）+ ant（蚂蚁）\n十只蚂蚁成了新租客。<b>原文</b>", snapshot.Association.Text);
+});
+Check("association is unavailable outside the answer stage and for empty notes", () =>
+{
+    foreach (var stage in new[] { "recall", "spelling", "spelling-recall", "blocked", "page", "loading" })
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(new { stage, stamp = "s:1", word = "test", association = new { type = "联想", text = "answer hint" } });
+        Assert(StudySnapshot.Parse(json).Association is null);
+    }
+    foreach (var text in new string?[] { null, "", "  ", "暂无助记" })
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(new { stage = "answer", stamp = "s:1", word = "test", association = new { text } });
+        Assert(StudySnapshot.Parse(json).Association is null);
+    }
+    Assert(StudySnapshot.Parse("{\"stage\":\"answer\",\"stamp\":\"s:1\",\"word\":\"test\",\"association\":null}").Association is null);
+});
+Check("association text is bounded and a missing type remains usable", () =>
+{
+    var json = System.Text.Json.JsonSerializer.Serialize(new { stage = "answer", stamp = "s:1", word = "test", association = new { type = new string('a', 100), text = new string('b', 7000) } });
+    var note = StudySnapshot.Parse(json).Association!;
+    Equal(40, note.Type.Length); Equal(6000, note.Text.Length);
+    Equal("", StudySnapshot.Parse("{\"stage\":\"answer\",\"stamp\":\"s:1\",\"word\":\"test\",\"association\":{\"type\":null,\"text\":\"提示\"}}").Association!.Type);
+});
 Check("invalid translation responses stay retryable instead of displaying data", () =>
 {
     foreach (var json in new[] { "null", "broken", "{}", "{\"stamp\":\"s:1\",\"id\":\"e1\"}",

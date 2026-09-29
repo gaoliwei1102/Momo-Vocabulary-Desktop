@@ -15,6 +15,12 @@ public sealed class StudyExample
     public string Text { get; set; } = "";
 }
 
+public sealed class StudyAssociation
+{
+    public string Type { get; set; } = "";
+    public string Text { get; set; } = "";
+}
+
 public sealed class StudySnapshot
 {
     public string Stage { get; set; } = "page";
@@ -24,6 +30,8 @@ public sealed class StudySnapshot
     public string Meaning { get; set; } = "";
     // Translations are intentionally absent: fetched separately after a click.
     public StudyExample[] Examples { get; set; } = [];
+    // The currently rendered official mnemonic, not a generated related-word list.
+    public StudyAssociation? Association { get; set; }
     public string Progress { get; set; } = "";
     public string Message { get; set; } = "";
     public bool Waiting { get; set; }
@@ -48,6 +56,13 @@ public sealed class StudySnapshot
                 !string.IsNullOrWhiteSpace(example.Id) && example.Id.Length <= 100 && !string.IsNullOrWhiteSpace(example.Text))
                 .DistinctBy(example => example.Id).ToArray();
             foreach (var example in value.Examples) example.Text = Limit(example.Text, 700);
+            if (value.Stage != "answer" || string.IsNullOrWhiteSpace(value.Association?.Text) || value.Association.Text.Trim() == "暂无助记")
+                value.Association = null;
+            else
+            {
+                value.Association.Type = Limit(value.Association.Type, 40);
+                value.Association.Text = Limit(value.Association.Text, 6000);
+            }
             value.Progress = Limit(value.Progress, 40);
             value.Message = Limit(value.Message, 1200);
             value.Stamp = Limit(value.Stamp, 100);
