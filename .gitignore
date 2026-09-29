@@ -1,0 +1,54 @@
+# Local tooling, builds, release archives and private working notes
+/.tools/
+/.local/
+/.nuget/
+/packages/
+/artifacts/
+/dist/
+**/[Bb]in/
+**/[Oo]bj/
+**/node_modules/
+**/TestResults/
+**/coverage/
+*.nupkg
+*.snupkg
+
+# IDE / OS state
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# App sessions, credentials and opt-in diagnostic output (never commit these)
+**/BrowserProfile/
+**/live-test-profile/
+**/test-profile/
+**/*-test-profile/
+**/*.WebView2/
+**/EBWebView/
+**/settings.json
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+*.bak
+*.dmp
+*.pfx
+*.p12
+*.key
+
+# Agent / editor local configuration
+.codex/
+.agents/
+
+# Legacy private notes, if copied back from .local during development
+/docs/verification.md
+/docs/plans/
+/docs/research/maimemo-api-*.yaml

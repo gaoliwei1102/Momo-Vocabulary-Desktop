@@ -1,0 +1,6 @@
+{
+  "name": "wordbubble-adapter-tests",
+  "private": true,
+  "scripts": { "test": "node --test adapter.test.cjs account.test.cjs" },
+  "devDependencies": { "jsdom": "26.1.0" }
+}

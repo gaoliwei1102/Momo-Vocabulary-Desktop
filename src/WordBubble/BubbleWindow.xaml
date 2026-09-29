@@ -1,0 +1,12 @@
+<Window x:Class="WordBubble.BubbleWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:WordBubble"
+    Title="浮词 · 小精灵" Width="78" Height="82" WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True" Background="Transparent"
+    ShowInTaskbar="False" ShowActivated="False" Topmost="True">
+  <Grid>
+    <Button x:Name="BubbleButton" Width="68" Height="74" Padding="0" AutomationProperties.Name="展开单词卡" ToolTip="浮词 · 点击背一个，拖动换位置，右键更多">
+      <Button.Template><ControlTemplate TargetType="Button">
+        <Border Background="Transparent" CornerRadius="30"><ContentPresenter /></Border>
+      </ControlTemplate></Button.Template>
+      <local:SpriteControl x:Name="Sprite" />
+    </Button>
+  </Grid>
+</Window>

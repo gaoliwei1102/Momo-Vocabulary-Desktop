@@ -1,0 +1,14 @@
+<!-- Original WordBubble sprout. Simplified face for a legible 16px tray icon. -->
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="64" Height="64">
+  <Path Data="M 31,22 Q 33,14 37,10" Stroke="#63864D" StrokeThickness="2.8" StrokeStartLineCap="Round" />
+  <Path Data="M 33,16 C 32,6 42,1 51,3 C 49,13 42,19 33,16 Z" Fill="#79A55B" />
+  <Path Data="M 30,17 C 20,19 13,13 14,6 C 24,5 31,10 30,17 Z" Fill="#A8C879" />
+  <Path Data="M 7,40 C 6,25 17,18 32,18 C 48,18 58,26 57,41 C 60,53 53,60 45,58 Q 38,63 32,59 Q 24,63 18,58 C 8,60 3,52 7,40 Z" Stroke="#6C8956" StrokeThickness="2" StrokeLineJoin="Round">
+    <Path.Fill><LinearGradientBrush StartPoint="0,0" EndPoint="0.7,1"><GradientStop Color="#EDF5CD" /><GradientStop Color="#C6E09E" Offset="1" /></LinearGradientBrush></Path.Fill>
+  </Path>
+  <Ellipse Canvas.Left="10" Canvas.Top="43" Width="11" Height="6" Fill="#E8AD95" />
+  <Ellipse Canvas.Left="43" Canvas.Top="43" Width="11" Height="6" Fill="#E8AD95" />
+  <Ellipse Canvas.Left="18" Canvas.Top="33" Width="6.5" Height="9" Fill="#304632" />
+  <Ellipse Canvas.Left="40" Canvas.Top="33" Width="6.5" Height="9" Fill="#304632" />
+  <Path Data="M 28,45 Q 32,50 36,45" Stroke="#42593A" StrokeThickness="2.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+</Canvas>

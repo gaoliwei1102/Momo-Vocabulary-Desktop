@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>WordBubble</AssemblyName>
+    <RootNamespace>WordBubble</RootNamespace>
+    <Version>0.3.4</Version>
+    <Product>浮词</Product>
+    <Description>安静的桌面背词窗口</Description>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <!-- WPF owns startup and DPI; WinForms is used only for the tray icon and screen queries. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+    <Resource Include="Assets\app.ico" />
+    <EmbeddedResource Include="Assets\study-adapter.js" />
+    <EmbeddedResource Include="Assets\account-adapter.js" />
+  </ItemGroup>
+</Project>
