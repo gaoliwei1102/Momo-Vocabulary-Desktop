@@ -4,6 +4,8 @@
 
 浮词是一个连接墨墨账号的 **Windows 桌面背词工具**。它提供独立设计的原生界面，用可拖动的气泡和小卡片完成日常复习。**本项目由社区独立开发，非墨墨官方客户端，与墨墨无隶属关系。**
 
+**快速入口：** [下载与启动](#下载与启动) · [第一次使用](#第一次使用) · [常用操作](#常用操作) · [常见问题](#常见问题) · [从源码开发](#从源码开发) · [仓库文件与忽略规则](#仓库文件与忽略规则)
+
 ![浮词的登录、学习首页与单词卡片，使用示例数据展示](docs/images/overview.png)
 
 ## 能做什么
@@ -21,31 +23,50 @@
 
 当前版本：**0.3.4**。运行环境为 **Windows 10 / 11 x64**。
 
-1. 在本仓库的 **Releases** 页面下载 `WordBubble-0.3.4-win-x64.zip`。如果还没有发布包，可以按下文从源码构建。
-2. **完整解压**到一个本地目录，运行其中的 `WordBubble.exe`，不要只复制 exe。
-3. 电脑需要安装 [Microsoft Edge WebView2 Evergreen Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)。发布包自带 .NET 运行时，普通用户无需另装 .NET SDK。
+| 你的需求 | 应获取的文件 | 需要准备 |
+| --- | --- | --- |
+| 直接使用浮词 | Releases 中的 `WordBubble-0.3.4-win-x64.zip` 运行包 | WebView2 Runtime、网络、自己的墨墨账号 |
+| 修改或自行构建 | 仓库源码，或 Release 中另行提供的源码包 | Windows、.NET 10 SDK；运行应用时还需要 WebView2 Runtime |
 
-升级时，先在系统托盘右键选择“退出浮词”，再解压并运行新版。不同版本共用本机登录会话和偏好设置。程序不包含自动更新和开机启动功能。
+1. 在本仓库的 **Releases** 页面查找 Windows 运行包。如果尚未提供运行包，可按[从源码开发](#从源码开发)自行构建。
+2. 确认电脑已安装 [Microsoft Edge WebView2 Evergreen Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)。运行包自带 .NET 运行时，普通用户无需另装 .NET SDK 或 Node.js。
+3. **完整解压**到一个本地目录，再运行其中的 `WordBubble.exe`。保留同目录的 DLL、运行时及其他文件，不要在压缩包内直接运行或只复制 exe。
+
+GitHub 的 **Code → Download ZIP** 和 Release 中自动生成的 **Source code** 下载项都是源码，不包含可直接运行的 exe。`.gitignore` 排除了 `dist/` 等构建产物，因此下载源码后没有这些文件夹是正常的。
+
+### 更新与退出
+
+更新时，先在系统托盘右键选择 **“退出浮词”**，再将新运行包完整解压到另一个目录并启动。当前版本在同一 Windows 用户下共用本机登录会话和偏好设置，通常无需重新填写账号。
+
+关闭学习卡片只会将它收起；**完全退出需要使用托盘或小精灵右键菜单的“退出浮词”**。程序不包含自动更新和开机启动功能。卸载时先退出，再删除解压的程序目录；本地账号会话和设置保存在独立的[数据目录](#本地数据与隐私)中。
 
 ## 第一次使用
 
-1. 点击桌面小精灵，使用墨墨的 **手机号 / 邮箱和密码**连接账号。已有登录会话会尝试自动恢复，卡片顶部的账号按钮可检查登录。
-2. 如果墨墨显示网页版公测说明，请阅读说明、服务条款及隐私政策，自行选择是否同意，再点击“开始学习”。账号是否具有网页版资格由墨墨决定。
-3. 按[墨墨网页版说明](https://memodocs.maimemo.com/docs/memo-web_study)在墨墨 App 中开启学习数据自动同步。先在 App 中设置好词书与每日学习计划，并完成同步。
-4. 在浮词选择 **随手 3 词 / 专注 5 词 / 自由背**，开始学习。小组模式只控制这次停下休息的时机，不会修改墨墨每日计划。
-5. 先回忆，再查看释义并如实反馈。完成一小组后，可以继续或收起；网页当前轮结束后的额外复习、签到等操作也需要自行点击。
+1. **先准备墨墨 App。** 设置词书和每日学习计划，按[墨墨网页版说明](https://memodocs.maimemo.com/docs/memo-web_study)开启学习数据自动同步，并完成同步。网页版使用资格由墨墨决定。
+2. **启动并连接账号。** 首次启动会自动展开卡片，使用墨墨的手机号 / 邮箱和密码登录。已有登录会话会尝试恢复；需要检查登录时，点击卡片顶部的“账号连接”按钮。后续启动通常显示小精灵，点击它即可打开卡片。
+3. **处理官网提示。** 如果出现网页版公测说明，请阅读完整说明、服务条款和隐私政策，自行选择是否同意，再点击“开始学习”。
+4. **选择本次节奏。** 选择“随手 3 词”“专注 5 词”或“自由背”。小组模式只决定本次何时提示休息，不会修改墨墨每日计划。
+5. **完成一张单词卡。** 先回忆，再查看释义；需要例句时展开“读N句，加深印象 ＋”，先读英文，点击某句的“显示翻译”才查看中文。随后按实际记忆情况选择“认识 / 模糊 / 忘记”。
+6. **休息或继续。** 完成一小组后，可继续或收起。官网当前轮结束后的额外复习、签到等操作仍需自行点击。
+
+小组的完成数以墨墨已完成进度的变化为准。同一个词可能需要多次复习，所以“随手 3 词”不一定只点击三次反馈。
 
 ### 常用操作
 
 | 操作 | 方式 |
 | --- | --- |
 | 展开 / 收起学习卡 | 点击小精灵，或 `Ctrl + Alt + M` |
+| 从系统托盘打开卡片 | 左键点击浮词托盘图标 |
 | 收起卡片 | `Esc` 或右上角收起按钮 |
 | 查看释义 / 答案 | `Space` 或卡片按钮 |
 | 认识 / 模糊 / 忘记 | 当前卡片对应的 `1` / `2` / `3` 按钮 |
+| 阅读例句 | 点击“读N句，加深印象 ＋”；例句较多时在内容区滚动 |
+| 查看 / 隐藏某句翻译 | 点击该句下方的“显示翻译”或“隐藏翻译”；收起或换词后恢复英文 |
 | 核对拼写 | 在拼写框输入后按 `Enter` |
 | 移动气泡 | 按住小精灵拖动，靠近屏幕边缘会吸附 |
-| 设置 / 会议模式 / 退出 | 小精灵或系统托盘图标的右键菜单 |
+| 调整置顶、透明度和快捷键 | 卡片顶部设置按钮，或小精灵 / 系统托盘图标的右键菜单 |
+| 临时隐藏小精灵 | 右键菜单选择“会议模式 · 隐藏到托盘”；点击托盘或按全局快捷键可恢复并展开卡片，右键“恢复气泡”只恢复小精灵 |
+| 完全退出程序 | 小精灵或系统托盘图标的右键菜单 → “退出浮词” |
 
 学习快捷键只在卡片获得焦点、且没有输入文字时响应，不影响账号、密码或拼写输入。全局快捷键可以在设置中更换。发音只在明确点击时播放，收起卡片会立即静音。
 
@@ -56,7 +77,7 @@
 - 本项目目前不使用开放 API 写入学习记录，也不维护第二套记忆算法。反馈是否提交成功、学习进度是否更新，取决于官方服务的处理结果。
 - 3 / 5 词的小组进度依据官网已完成数的变化，不按点击次数累计；未知进度不会显示为虚构数字。
 - 词书、每日计划和账号管理继续在墨墨官方应用中操作。选书、购买、搜索词库、完整笔记编辑等功能不在当前范围内。
-- 原生登录支持手机号 / 邮箱与密码，暂不支持微信扫码、注册和复杂人机验证。
+- 原生登录支持手机号 / 邮箱与密码，暂不支持微信扫码、注册和复杂人机验证。当前没有独立的注销或切换账号功能；“账号连接”用于检查登录，已有会话会继续复用。
 - 学习需要联网；没有离线正式背词和本地待同步队列。收起会保留后台会话，退出会关闭连接。
 - 官网页面结构或登录策略变化可能导致适配失效。遇到无法识别的状态，浮词会停止提交并提示重连。
 
@@ -66,6 +87,8 @@
 
 | 情况 | 建议 |
 | --- | --- |
+| 下载后只有 `src` 等目录，没有 exe | 下载的是源码。请获取 Release 的 Windows 运行包，或按下文构建；仓库不包含被忽略的 `dist/`。 |
+| 提示缺少 DLL，或 exe 无法单独运行 | 重新完整解压运行包，保留全部文件，并确认已安装 WebView2 Runtime。 |
 | 一直显示连接中，或提示连接中断 | 检查网络与 WebView2 Runtime；点击“重新连接”。仍失败时，从托盘退出后重新启动。 |
 | 找不到登录入口，或登录态失效 | 点击卡片顶部账号图标，或错误页的“检查账号登录”。 |
 | 登录后没有可学习内容 / 提示无网页版资格 | 在墨墨 App 检查词书、计划、自动同步及网页版使用要求；这些由官方服务控制。 |
@@ -73,13 +96,15 @@
 | 点击快捷键没有反应 | 快捷键可能被其他程序占用，先点击小精灵进入，再在设置中更换组合键。 |
 | 气泡或卡片找不到了 | 点击托盘图标恢复；检查会议模式和全屏自动收起设置，或选择“把窗口移回当前屏幕”。 |
 | 发音没有声音 | 点击发音按钮，并检查 Windows 音量混合器、输出设备和网络；后台网页默认保持静音。 |
+| 没有例句入口，或某句没有翻译 | 入口只在当前页面提供可用例句时显示；拼写题可能只提供一条英文提示。中文需逐句点击加载，“这句暂时没有翻译”表示官网当前未提供可读取的译文。 |
+| 翻译加载失败 | 点击该句的“重新加载翻译”。若整个学习连接也已中断，再使用“重新连接”。 |
 | 新版本启动后仍像旧版 | 先通过托盘退出旧进程，再启动新版。仅关闭学习卡片不会退出程序。 |
 
 仍有问题时，可在本仓库的 Issues 中使用问题反馈模板，提供版本、系统和复现步骤。请勿公开账号、密码、登录会话目录或未检查的诊断日志。
 
 ## 本地数据与隐私
 
-默认数据目录为 `%LOCALAPPDATA%\WordBubble\`：
+默认数据目录为 `%LOCALAPPDATA%\WordBubble\`。可把这个路径粘贴到文件资源管理器的地址栏打开；它与程序解压目录、源码目录分开保存：
 
 | 内容 | 用途 |
 | --- | --- |
@@ -92,15 +117,28 @@
 
 ## 从源码开发
 
-需要 Windows、[.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)、WebView2 Runtime。运行 JavaScript 适配器测试还需要 Node.js 22 或更新的受支持版本及 npm。
+需要 Windows、[.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) 和 WebView2 Runtime。`global.json` 指定 .NET 10.0.100，并允许使用同一主次版本下更新的稳定 SDK 功能版本。运行 JavaScript 适配器测试还需要 Node.js 和 npm；仓库 CI 使用 Node.js 24，单纯构建或运行 WPF 应用不需要 Node.js。
 
-在仓库根目录打开 PowerShell：
+下载源码并解压，或使用 Git 克隆你要开发的仓库。在包含 `README.md`、`global.json`、`src/` 的**仓库根目录**打开 PowerShell。
+
+### 构建并运行
+
+源码不附带 `.tools/dotnet/`、NuGet 缓存或 `node_modules/`。先在系统中安装 SDK；首次构建需要联网还原 NuGet 依赖。当前应用通过界面登录，无需填写 `.env` 文件或墨墨开放 API Token。
 
 ```powershell
-# 构建及启动应用
-dotnet build .\src\WordBubble\WordBubble.csproj -c Release
-dotnet run --project .\src\WordBubble\WordBubble.csproj
+# 检查系统已安装的 SDK，应包含 10.0.x
+dotnet --list-sdks
 
+# 构建时自动还原 NuGet 依赖
+dotnet build .\src\WordBubble\WordBubble.csproj -c Release
+dotnet run --project .\src\WordBubble\WordBubble.csproj -c Release
+```
+
+开始运行源码版本前，先退出已有的浮词进程。同一桌面会话内只运行一个实例，同一 Windows 用户下的开发版本默认也使用现有的设置和登录会话；需要隔离浏览器会话时，参阅 [CONTRIBUTING.md](CONTRIBUTING.md#验证改动) 的诊断参数说明。
+
+### 检查与预览
+
+```powershell
 # 核心逻辑检查（本项目使用控制台测试程序）
 dotnet run --project .\tests\WordBubble.Tests\WordBubble.Tests.csproj
 
@@ -112,12 +150,35 @@ Pop-Location
 
 # 使用示例数据生成原生界面预览，不连接真实账号
 dotnet run --project .\scripts\PreviewRenderer\PreviewRenderer.csproj -c Release -- artifacts/native-preview
+```
 
+预览输出到 `artifacts/native-preview/`，自动检查使用样本数据，不需要输入真实墨墨账号。检查结果不能代替真实 Windows 环境验证，尤其是多屏缩放、长期运行、官网改版和具体账号的登录流程。
+
+### 打包运行版本
+
+```powershell
 # 生成 Windows x64 发布目录和 ZIP
 .\scripts\publish.ps1
 ```
 
-发布结果默认位于 `dist/WordBubble-0.3.4/` 和 `dist/WordBubble-0.3.4-win-x64.zip`。脚本优先使用本地 `.tools/dotnet/` 中的 SDK（如果存在），否则使用系统 `dotnet`。已有非空输出目录时会停止，避免把旧文件混入安装包；重新打包可指定新的 `-OutputName`。构建输出、依赖缓存和发布包不应提交到 Git，ZIP 可作为 GitHub Release 附件发布。
+如果默认输出目录已经存在且非空，改用一个新的目录名：
+
+```powershell
+.\scripts\publish.ps1 -OutputName WordBubble-0.3.4-local
+```
+
+默认结果为 `dist/WordBubble-0.3.4/WordBubble.exe` 和 `dist/WordBubble-0.3.4-win-x64.zip`。脚本生成包含 .NET 运行时的完整目录，并复制使用说明、许可证及实际依赖的第三方通知；分发时使用完整 ZIP。
+
+脚本优先使用本机已有的 `.tools/dotnet/`，没有该目录时使用系统 `dotnet`，无需自己补建 `.tools/`。已有非空输出目录时会停止；`-OutputName` 只改变输出目录和 ZIP 名称，不修改应用版本。`dist/` 被 Git 忽略，生成的 ZIP 应作为 GitHub **Release 附件**发布。
+
+### 构建遇到问题
+
+| 情况 | 处理方式 |
+| --- | --- |
+| 找不到 `dotnet`，或提示 SDK 版本不匹配 | 安装 .NET 10 SDK 后重新打开终端，用 `dotnet --list-sdks` 检查；安装 Runtime 不能代替 SDK。 |
+| 找不到 `npm` | 仅在运行 DOM 适配器测试时需要 Node.js / npm，安装后在 `tests/adapter/` 执行 `npm ci`。 |
+| NuGet / npm 依赖还原失败 | 检查网络、代理和软件源配置后重试；源码不包含被 `.gitignore` 排除的依赖缓存。 |
+| 发布提示输出目录非空 | 用新的 `-OutputName` 打包，或自行归档旧目录后再发布。 |
 
 ### 项目结构
 
@@ -131,9 +192,42 @@ scripts/PreviewRenderer/  原生界面离屏预览与流程断言
 scripts/create-icon.ps1   图标生成脚本
 scripts/publish.ps1       Windows x64 打包脚本
 docs/images/              使用示例数据生成的公开预览图
+licenses/                 第三方许可证与通知
+.github/                  构建检查工作流与 Issue 模板
+global.json               .NET SDK 版本约束
 ```
 
-更详细的修改和测试约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。自动检查不能代替真实 Windows 环境验证，尤其是多屏缩放、长期运行、官网改版及具体账号的登录流程。
+更详细的修改和测试约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## 仓库文件与忽略规则
+
+仓库保存能重新构建应用的源码、配置、锁文件和公共文档；生成物及本地数据按根目录 `.gitignore` 的规则留在各自电脑上。
+
+| 被忽略的内容 | 用途与恢复方式 |
+| --- | --- |
+| `.tools/`、`.nuget/`、`packages/`、`node_modules/` | 本地工具及依赖；安装系统 SDK，通过 NuGet / `npm ci` 还原所需依赖。 |
+| `bin/`、`obj/`、`*.nupkg`、`*.snupkg` | 编译与打包产物，构建时重新生成。 |
+| `dist/` | 完整运行目录和发布 ZIP，由 `scripts/publish.ps1` 生成。 |
+| `artifacts/`、`TestResults/`、`coverage/` | 预览、检查结果及测试输出，运行对应检查后生成。 |
+| `.local/`、旧的 `docs/verification.md`、`docs/plans/`、`docs/research/maimemo-api-*.yaml` | 个人笔记、旧验证记录和本地参考资料，不是运行必需文件。 |
+| `BrowserProfile/`、测试 profile、`*.WebView2/`、`EBWebView/`、`settings.json` | 本机登录会话与偏好，应用按需创建，不随源码分发。 |
+| `.env`、`.env.*`、`*.key`、`*.pfx`、`*.p12` | 环境凭据和密钥文件；`.env.example` 是允许公开无凭据示例的例外，当前项目无需此配置。 |
+| `*.log`、`*.tmp`、`*.bak`、`*.dmp` | 日志、临时文件、备份与崩溃转储，保留在本地。 |
+| `.vs/`、`.idea/`、`.vscode/`、`.codex/`、`.agents/` 等 | 编辑器、代理工具及系统产生的本机状态。 |
+
+应保留在源码中的文件包括 `src/`、`tests/`、`scripts/`、公共 `docs/`、`licenses/`、`.github/`、`global.json`、`tests/adapter/package.json` 及其 `package-lock.json`、`.gitignore`、`.gitattributes`、`.editorconfig` 和许可证。`docs/images/` 中的示例预览图用于 README 展示，与忽略的 `artifacts/` 不同。
+
+`.gitignore` **不会移除已经被 Git 跟踪的文件，也不会自动过滤网页上传或手工压缩的 ZIP**。在已有 Git 仓库中，提交前可检查：
+
+```powershell
+git status --short
+git diff --cached --stat
+
+# 列出“已经跟踪，但匹配忽略规则”的文件；通常应没有输出
+git ls-files -ci --exclude-standard
+```
+
+使用 GitHub 网页上传时，请选择整理后的源码文件或经过检查的源码包，不要直接上传整个本地开发目录。忽略规则也不会识别所有截图中的个人信息，公共图片应使用示例数据。
 
 准备建立自己的 GitHub 仓库或发布安装包时，可按[仓库与发布整理说明](docs/PUBLISHING.md)操作。GitHub Actions 会检查构建与本地样本测试，不自动登录或发布。
 
