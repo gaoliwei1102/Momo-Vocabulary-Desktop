@@ -12,7 +12,9 @@
 
 仓库中的原文来自 0.3.3 验证时使用的 NuGet 包：.NET / Windows Desktop Runtime 10.0.12、WebView2 SDK 1.0.4191.47。`scripts/publish.ps1` 会按实际发布依赖从 NuGet 缓存复制对应原文，并在安装包的 `licenses/versions.json` 记录版本。更新依赖时也应更新仓库中的原文副本。
 
-WebView2 Evergreen 浏览器运行环境使用系统安装版本，未打包在浮词 ZIP 内。其安装和使用适用 [Microsoft WebView2 分发页面](https://developer.microsoft.com/microsoft-edge/webview2/) 的条款。
+WebView2 Evergreen 浏览器运行环境使用系统安装版本，未打包在浮词 ZIP 内。EXE 安装器携带微软官方 WebView2 Evergreen Bootstrapper，仅在未检测到运行环境时调用它联网安装；构建时检查该引导程序的 Microsoft 数字签名。其安装和使用适用 [Microsoft WebView2 分发页面](https://developer.microsoft.com/microsoft-edge/webview2/) 的条款。
+
+EXE 安装器由 [Inno Setup](https://jrsoftware.org/isinfo.php) 构建。Inno Setup 的许可见其[官方许可说明](https://jrsoftware.org/files/is/license.txt)。编译器仅用于构建，不随浮词应用目录分发。
 
 ## 开发依赖
 

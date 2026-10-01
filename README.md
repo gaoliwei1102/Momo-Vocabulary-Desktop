@@ -22,24 +22,31 @@
 
 ## 下载与启动
 
-当前版本：**0.3.5**。运行环境为 **Windows 10 / 11 x64**。
+当前版本：**0.3.6**。运行环境为 **Windows 10 / 11 x64**。
+
+**[下载 Windows EXE 安装包](https://github.com/gaoliwei1102/Momo-Vocabulary-Desktop/releases/download/v0.3.6/WordBubble-0.3.6-Setup-x64.exe)** · [查看所有发布版本](https://github.com/gaoliwei1102/Momo-Vocabulary-Desktop/releases)
 
 | 你的需求 | 应获取的文件 | 需要准备 |
 | --- | --- | --- |
-| 直接使用浮词 | Releases 中的 `WordBubble-0.3.5-win-x64.zip` 运行包 | WebView2 Runtime、网络、自己的墨墨账号 |
+| 直接使用浮词（推荐） | `WordBubble-0.3.6-Setup-x64.exe` 安装包 | 网络、自己的墨墨账号；安装器会检测并在缺少时安装 WebView2 Runtime |
+| 使用便携版 | Releases 中的 `WordBubble-0.3.6-win-x64.zip` 运行包 | 已安装 WebView2 Runtime、网络、自己的墨墨账号 |
 | 修改或自行构建 | 仓库源码，或 Release 中另行提供的源码包 | Windows、.NET 10 SDK；运行应用时还需要 WebView2 Runtime |
 
-1. 在本仓库的 **Releases** 页面查找 Windows 运行包。如果尚未提供运行包，可按[从源码开发](#从源码开发)自行构建。
-2. 确认电脑已安装 [Microsoft Edge WebView2 Evergreen Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)。运行包自带 .NET 运行时，普通用户无需另装 .NET SDK 或 Node.js。
-3. **完整解压**到一个本地目录，再运行其中的 `WordBubble.exe`。保留同目录的 DLL、运行时及其他文件，不要在压缩包内直接运行或只复制 exe。
+1. 下载上面的 **EXE 安装包**，双击并按提示安装到当前 Windows 用户的程序目录。
+2. 安装器会自动检测 [Microsoft Edge WebView2 Evergreen Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)，缺少时通过微软安装程序联网安装。程序自带 .NET 运行时，无需另装 .NET SDK 或 Node.js。
+3. 完成后从桌面的 **“浮词 WordBubble”** 快捷方式启动，连接自己的墨墨账号。
+
+便携版用户请**完整解压** ZIP 到本地目录，再运行其中的 `WordBubble.exe`。保留同目录的 DLL、运行时及其他文件，不要在压缩包内直接运行或只复制 exe；便携版需要自行准备 WebView2 Runtime。
 
 GitHub 的 **Code → Download ZIP** 和 Release 中自动生成的 **Source code** 下载项都是源码，不包含可直接运行的 exe。`.gitignore` 排除了 `dist/` 等构建产物，因此下载源码后没有这些文件夹是正常的。
 
-### 更新与退出
+### 更新、退出与卸载
 
-更新时，先在系统托盘右键选择 **“退出浮词”**，再将新运行包完整解压到另一个目录并启动。当前版本在同一 Windows 用户下共用本机登录会话和偏好设置，通常无需重新填写账号。
+更新时，先在系统托盘右键选择 **“退出浮词”**，下载并运行新版 EXE 安装包，安装到原位置即可。便携版则将新 ZIP 完整解压到另一个目录并启动。同一 Windows 用户下共用本机登录会话和偏好设置，通常无需重新填写账号。
 
-关闭学习卡片只会将它收起；**完全退出需要使用托盘或小精灵右键菜单的“退出浮词”**。程序不包含自动更新和开机启动功能。卸载时先退出，再删除解压的程序目录；本地账号会话和设置保存在独立的[数据目录](#本地数据与隐私)中。
+关闭学习卡片只会将它收起；**完全退出需要使用托盘或小精灵右键菜单的“退出浮词”**。程序不包含自动更新和开机启动功能。
+
+安装版可在 Windows **设置 → 应用** 中找到“浮词 WordBubble”并卸载；便携版先退出，再删除解压的程序目录。更新和卸载都会保留独立[数据目录](#本地数据与隐私)中的登录会话和设置。如需清除这些数据，请完全退出后手动删除 `%LOCALAPPDATA%\WordBubble\`。
 
 ## 第一次使用
 
@@ -90,8 +97,9 @@ GitHub 的 **Code → Download ZIP** 和 Release 中自动生成的 **Source cod
 
 | 情况 | 建议 |
 | --- | --- |
-| 下载后只有 `src` 等目录，没有 exe | 下载的是源码。请获取 Release 的 Windows 运行包，或按下文构建；仓库不包含被忽略的 `dist/`。 |
+| 下载后只有 `src` 等目录，没有 exe | 下载的是源码。请获取 Release 的 `WordBubble-0.3.6-Setup-x64.exe` 安装包，或按下文构建。 |
 | 提示缺少 DLL，或 exe 无法单独运行 | 重新完整解压运行包，保留全部文件，并确认已安装 WebView2 Runtime。 |
+| 安装时无法下载 WebView2 Runtime | 检查网络后重试，或先从微软官网安装 WebView2 Evergreen Runtime，再运行浮词安装包。 |
 | 一直显示连接中，或提示连接中断 | 检查网络与 WebView2 Runtime；点击“重新连接”。仍失败时，从托盘退出后重新启动。 |
 | 找不到登录入口，或登录态失效 | 点击卡片顶部账号图标，或错误页的“检查账号登录”。 |
 | 登录后没有可学习内容 / 提示无网页版资格 | 在墨墨 App 检查词书、计划、自动同步及网页版使用要求；这些由官方服务控制。 |
@@ -108,7 +116,7 @@ GitHub 的 **Code → Download ZIP** 和 Release 中自动生成的 **Source cod
 
 ## 本地数据与隐私
 
-默认数据目录为 `%LOCALAPPDATA%\WordBubble\`。可把这个路径粘贴到文件资源管理器的地址栏打开；它与程序解压目录、源码目录分开保存：
+默认数据目录为 `%LOCALAPPDATA%\WordBubble\`。可把这个路径粘贴到文件资源管理器的地址栏打开；它与程序安装目录、便携版解压目录和源码目录分开保存：
 
 | 内容 | 用途 |
 | --- | --- |
@@ -168,12 +176,27 @@ dotnet run --project .\scripts\PreviewRenderer\PreviewRenderer.csproj -c Release
 如果默认输出目录已经存在且非空，改用一个新的目录名：
 
 ```powershell
-.\scripts\publish.ps1 -OutputName WordBubble-0.3.5-local
+.\scripts\publish.ps1 -OutputName WordBubble-0.3.6-local
 ```
 
-默认结果为 `dist/WordBubble-0.3.5/WordBubble.exe` 和 `dist/WordBubble-0.3.5-win-x64.zip`。脚本生成包含 .NET 运行时的完整目录，并复制使用说明、许可证及实际依赖的第三方通知；分发时使用完整 ZIP。
+默认结果为 `dist/WordBubble-0.3.6/WordBubble.exe` 和 `dist/WordBubble-0.3.6-win-x64.zip`。脚本生成包含 .NET 运行时的完整目录，并复制使用说明、许可证及实际依赖的第三方通知。便携分发时使用完整 ZIP。
 
-脚本优先使用本机已有的 `.tools/dotnet/`，没有该目录时使用系统 `dotnet`，无需自己补建 `.tools/`。已有非空输出目录时会停止；`-OutputName` 只改变输出目录和 ZIP 名称，不修改应用版本。`dist/` 被 Git 忽略，生成的 ZIP 应作为 GitHub **Release 附件**发布。
+脚本优先使用本机已有的 `.tools/dotnet/`，没有该目录时使用系统 `dotnet`，无需自己补建 `.tools/`。已有非空输出目录时会停止；`-OutputName` 只改变输出目录和 ZIP 名称，不修改应用版本。
+
+### 制作 EXE 安装包
+
+在 Windows 安装 [Inno Setup](https://jrsoftware.org/isinfo.php)，然后运行：
+
+```powershell
+.\scripts\build-installer.ps1 -IsccPath 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+
+# 可选：使用已下载的微软 WebView2 Evergreen Bootstrapper
+.\scripts\build-installer.ps1 -IsccPath 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' -WebView2BootstrapperPath 'C:\Downloads\MicrosoftEdgeWebview2Setup.exe'
+```
+
+安装包输出为 `dist/WordBubble-0.3.6-Setup-x64.exe`，封装完整的自包含程序。它安装到当前用户目录、创建桌面快捷方式，并在缺少 WebView2 Runtime 时通过微软引导程序联网安装。未指定 `-WebView2BootstrapperPath` 时，构建脚本会下载微软引导程序。
+
+`dist/` 被 Git 忽略；将 EXE 安装包和便携 ZIP 作为 GitHub **Release 附件**发布。构建脚本不会为安装包签名，Windows 可能显示未知发布者或 SmartScreen 提示；发布时应如实说明签名状态。详细流程见 [PUBLISHING.md](docs/PUBLISHING.md)。
 
 ### 构建遇到问题
 
@@ -195,6 +218,7 @@ tests/adapter/             JavaScript DOM 样本测试与 npm 锁文件
 scripts/PreviewRenderer/  原生界面离屏预览与流程断言
 scripts/create-icon.ps1   图标生成脚本
 scripts/publish.ps1       Windows x64 打包脚本
+scripts/build-installer.ps1  Windows EXE 安装包构建脚本（需要 Inno Setup）
 docs/images/              使用示例数据生成的公开预览图
 licenses/                 第三方许可证与通知
 .github/                  构建检查工作流与 Issue 模板
@@ -211,7 +235,7 @@ global.json               .NET SDK 版本约束
 | --- | --- |
 | `.tools/`、`.nuget/`、`packages/`、`node_modules/` | 本地工具及依赖；安装系统 SDK，通过 NuGet / `npm ci` 还原所需依赖。 |
 | `bin/`、`obj/`、`*.nupkg`、`*.snupkg` | 编译与打包产物，构建时重新生成。 |
-| `dist/` | 完整运行目录和发布 ZIP，由 `scripts/publish.ps1` 生成。 |
+| `dist/` | 完整运行目录、便携 ZIP 和 EXE 安装包，由发布与安装包构建脚本生成。 |
 | `artifacts/`、`TestResults/`、`coverage/` | 预览、检查结果及测试输出，运行对应检查后生成。 |
 | `.local/`、旧的 `docs/verification.md`、`docs/plans/`、`docs/research/maimemo-api-*.yaml` | 个人笔记、旧验证记录和本地参考资料，不是运行必需文件。 |
 | `BrowserProfile/`、测试 profile、`*.WebView2/`、`EBWebView/`、`settings.json` | 本机登录会话与偏好，应用按需创建，不随源码分发。 |

@@ -9,7 +9,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>WordBubble</AssemblyName>
     <RootNamespace>WordBubble</RootNamespace>
-    <Version>0.3.5</Version>
+    <Version>0.3.6</Version>
     <Product>浮词</Product>
     <Description>安静的桌面背词窗口</Description>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>

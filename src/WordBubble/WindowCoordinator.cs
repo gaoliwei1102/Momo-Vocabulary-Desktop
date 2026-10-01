@@ -317,7 +317,7 @@ internal sealed class WindowCoordinator : IDisposable
         SaveBubblePosition();
         _store.Save(_settings);
     }
-    private void Exit() => System.Windows.Application.Current.Shutdown();
+    private void Exit() => ((App)System.Windows.Application.Current).RequestShutdown();
 
     public void Dispose()
     {

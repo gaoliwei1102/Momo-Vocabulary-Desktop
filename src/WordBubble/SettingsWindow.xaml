@@ -26,7 +26,7 @@
       <Button Content="把窗口移回当前屏幕" HorizontalAlignment="Left" Click="ResetPosition" />
       <Border BorderBrush="#DCE3DA" BorderThickness="0,1,0,0" Margin="0,22,0,0" Padding="0,14,0,0">
         <StackPanel>
-          <TextBlock Text="浮词 0.3.5 · 你的桌边学习空间" FontSize="12" />
+          <TextBlock Text="浮词 0.3.6 · 你的桌边学习空间" FontSize="12" />
           <TextBlock Text="独立设计的桌面背词界面，学习记录连接墨墨账号。非墨墨官方客户端。" TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource MutedInk}" Margin="0,6,0,0" />
         </StackPanel>
       </Border>

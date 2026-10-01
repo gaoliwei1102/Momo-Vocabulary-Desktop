@@ -1,4 +1,4 @@
-param([string]$Configuration = 'Release', [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9._-]*$')][string]$OutputName = 'WordBubble-0.3.5', [switch]$NoRestore)
+param([string]$Configuration = 'Release', [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9._-]*$')][string]$OutputName = 'WordBubble-0.3.6', [switch]$NoRestore)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $sdk = Join-Path $projectRoot '.tools\dotnet\dotnet.exe'
@@ -16,7 +16,7 @@ if (Test-Path -LiteralPath $publishDirectory) {
 }
 [string[]]$restoreArguments = @()
 if ($NoRestore) { $restoreArguments += '--no-restore' }
-& $sdk publish (Join-Path $projectRoot 'src\WordBubble\WordBubble.csproj') -c $Configuration -r win-x64 --self-contained true -p:PublishSingleFile=false -o $publishDirectory --nologo @restoreArguments
+& $sdk publish (Join-Path $projectRoot 'src\WordBubble\WordBubble.csproj') -c $Configuration -r win-x64 --self-contained true -p:PublishSingleFile=false -p:ContinuousIntegrationBuild=true -o $publishDirectory --nologo @restoreArguments
 if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
 foreach ($document in @('README.md', 'CONTRIBUTING.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'docs/PUBLISHING.md', 'docs/images/overview.png', 'docs/images/mascot.png')) {
     $destinationFile = Join-Path $publishDirectory $document

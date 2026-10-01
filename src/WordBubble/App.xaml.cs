@@ -89,12 +89,26 @@ public partial class App : System.Windows.Application
                 if (await server.ReadAsync(signal, cancellation) == 1)
                 {
                     ConnectionLog.Write(signal[0] == 2 ? "exit-request" : "activate-request");
-                    await Dispatcher.InvokeAsync(() => { if (signal[0] == 2) Shutdown(); else _coordinator?.ShowStudy(); });
+                    await Dispatcher.InvokeAsync(() => { if (signal[0] == 2) RequestShutdown(); else _coordinator?.ShowStudy(); });
                 }
             }
             catch (OperationCanceledException) { break; }
             catch (IOException) { await Task.Delay(500, cancellation); }
         }
+    }
+
+    internal void RequestShutdown()
+    {
+        // Allow the learning card to close before WPF closes the bubble. Its
+        // normal close handler collapses the card and shows the bubble again.
+        _coordinator?.Dispose();
+        Shutdown();
+    }
+
+    protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
+    {
+        base.OnSessionEnding(e);
+        if (!e.Cancel) _coordinator?.Dispose();
     }
 
     protected override void OnExit(ExitEventArgs e)
